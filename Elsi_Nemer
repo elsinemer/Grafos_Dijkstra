@@ -1,0 +1,120 @@
+import numpy as np
+
+class Grafo:
+    
+    #generador de grafo con 'cant_nodos' nodos
+    def __init__(self, cant_nodos):
+        self.matriz_ad = np.zeros((cant_nodos, cant_nodos))
+        self.cant_nodos = cant_nodos
+
+    
+    #agrega 'cant_nodos_nuevos' nodos al grafo
+    def agregar_nodos(self, cant_nodos_nuevos):
+
+        #cambio el tamaño de la matriz sumandole cant_nodos_nuevos
+        self.cant_nodos += cant_nodos_nuevos
+
+        #agregar 'cant_nodos_nuevos' filas y columnas
+        for i in range(cant_nodos_nuevos):
+            self.matriz_ad = np.pad(self.matriz_ad, ((0, 1), (0, 1)), mode='constant')
+    
+
+    #crea una arista dirccionada dede v a u, v y u indices del nodo 
+    def agregar_arista(self, v, u, peso):
+        
+        #valido que los nodos existan
+        if 0 <= u < self.cant_nodos and 0 <= v < self.cant_nodos:
+            
+            #cargo el pedo de la arista en el lugar correspondiente de la matriz
+            self.matriz_ad[v][u] = peso
+        else:
+            print('Los modos ingresados no existen')
+    
+
+    #imprime los valores actuales de la matriz de adyacencia
+    def mostrar_matriz(self):
+        for row in self.matriz_ad:
+            print(f"[ {', '.join(str(int(x)) for x in row)} ]")
+        print()
+
+
+    #funcion que devuelve y calcula el peso del el camino mas corto desde el 'nodo_inicio' a todos los nodos del grafo
+    def dijkstra(self, nodo_inicio):
+        if (0 <= nodo_inicio < self.cant_nodos):
+            #la funcion 'obtener_caminos' recorre el array precesores para reconstruir el camino mas corto desde el 'nodo_inicio' al 'nodo_fin'
+            def obtener_camino(precesores, nodo_inicio, nodo_fin):
+                camino = []
+                actual = nodo_fin
+                
+                #mientras en el array de precesores no aparezca None (lo que significa que no he ya llegado al final del camino), sigo iterando
+                while actual is not None:
+                    
+                    #inserto en la posicion 0 el valor
+                    camino.insert(0, actual)
+
+                    #para el nuevo valor es el precesos del valor actual
+                    actual = precesores[actual]
+
+                    #valido que si es nuvo valor es el 'nodo_inicio', si es asi lo agrego y paro el while
+                    if actual == nodo_inicio:
+                        camino.insert(0, nodo_inicio)
+                        break
+
+                #retorno la lista separada por flechas para mostrar
+                return '->'.join(str(x) for x in camino)
+
+            distancias = [float('inf')] * self.cant_nodos
+            precesores = [None] * self.cant_nodos
+            distancias[nodo_inicio] = 0
+            visitado = [False] * self.cant_nodos
+
+            for _ in range(self.cant_nodos):
+                distancia_minima = float('inf')
+                
+                #en u se va a guardar el nodo con la menor distancia en el array de distancias y que no ha sido visitado
+                u = None
+                for i in range(self.cant_nodos):
+                    if not visitado[i] and distancias[i] < distancia_minima:
+                        distancia_minima = distancias[i]
+                        u = i
+
+                #si no hay nodos por visitar termino el for 
+                if u is None:
+                    break
+                
+                #actualizo visitado para u
+                visitado[u] = True
+
+                #recorro la matriz para encontrar los adyacentes de u
+                for v in range(self.cant_nodos):
+                    
+                    #chequeo que sea adyasente y que no se haya visitado ya
+                    if self.matriz_ad[u][v] != 0 and not visitado[v]:
+                        
+                        #calculo la distancia del vertice inicio al vertive v
+                        alt = distancias[u] + self.matriz_ad[u][v]
+                        
+                        #si la nueva distancia calculada es menor a la ya guardada actualizo la distancia y el precesor sino no hago nada
+                        if alt < distancias[v]:
+                            distancias[v] = alt
+                            precesores[v] = u
+
+            #itero sobre las distancias e imprimo, para cada par de nodos calculo el camino y muestro la distancia
+            for i, d in enumerate(distancias):
+                print(f"camino de {nodo_inicio} a {i} es: {obtener_camino(precesores, nodo_inicio, i)} distancia: {d}")
+        else:
+            print('El nodo ingresado no existe')
+    
+
+g = Grafo(2)
+
+g.agregar_nodos(3)
+g.agregar_arista(0,2,1)
+g.agregar_arista(0,3,2)
+g.agregar_arista(1,0,1)
+g.agregar_arista(2,1,1)
+g.agregar_arista(2,3,3)
+g.agregar_arista(4,0,5)
+g.mostrar_matriz()
+
+g.dijkstra(4)
